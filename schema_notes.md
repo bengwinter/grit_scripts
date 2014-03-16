@@ -1,37 +1,41 @@
 Relationships
 
-Organization
-has_many :gyms
+Organization 
+Example: Equinox
+has many Gyms
 
 Gym
-belongs_to :organization
-has_many :courses
-has_many :instructors, through: :courses
+Example: Equinox Back Bay
+belongs to Organization
+has many Courses
 
-Course
-belongs_to :gym
-has_many :sections
-
-Section
-belongs_to :course
-belongs_to :instructor
-has_many :appointments
+Course 
+Example: Bikram
+belongs to Gym
+has many Sections
 
 Instructor
-has_many :courses
-has_many :gyms, through: :courses
+Example: Jillian Michaels
+has many Sections
 
+Section
+Example: Bikram, Monday at 7:00 AM with Jillian Michaels
+belongs to Course
+belongs to Instructor
+has many Appointments
 
 User
-has_many :appointments
+Example: Anyone who works out or goes to a gym
+has many Appointments
+
+Appointments
+Example: User attends Bikram, Monday at 7:00 AM with Jillian Michaels
+belongs to User
+belongs to Section
 
 Appointment
-belongs_to :section
-belongs_to :user
-
-
-Appointment
-    notes (text); placeholder
+    rating (integer)
+    review (text)
     user_id (integer); belongs to user
     section_id (integer); belongs to section
 
