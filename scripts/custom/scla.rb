@@ -1,8 +1,48 @@
 require_relative '../db_connect.rb'
 
-binding.pry
+@week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-gym = Organization.where(name: "Sports Club LA")
+org = Organization.where(name: "Sports Club LA")[0]
+browser = Watir::Browser.new :phantomjs
+
+org.gyms.each do |gym|
+  browser.goto gym["course_url"]
+  @week.each do |day|
+    @day_of_class = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','') + '/' + Time.now.year.to_s
+    browser.div(css: "##{day}").divs(css: '.class').each do |course|
+      course_data = Nokogiri::HTML(course.html)
+      binding.pry
+      #course
+      title = course_data.css('.name').text.gsub('*', '')
+      paid_class = course_data.css('.name').text.include?('**') ? TRUE : FALSE
+      class_location = course_data.css('.studio').text
+      categories = course_data.css('div')[0].attributes["class"].value.split
+      
+      #description = #click for description
+
+      #instructor
+      instructor = course_data.css('.instructor').text.gsub('*', '').gsub('Sub: ','')
+      personal_trainer = course_data.css('.instructor').text.include?('*') ? TRUE : FALSE
+      substitute = course_data.css('.instructor').text.include?('Sub') ? TRUE : FALSE
+      #description = #click for description
+
+      #session
+      start_time = course_data.css('.time').text.split[0].gsub('am', ' AM').gsub('pm', ' PM')
+      end_time = course_data.css('.time').text.split[2].gsub('am', ' AM').gsub('pm', ' PM')
+      level = course_data.css('.level').text + ": " + course_data.css('.level')[0].attributes["title"].text
+      day_of_class = @day_of_class
+
+
+      gym.courses.create(title: "text", duration: "float", description: "text", room_location: "text", level: "text", categories: "array",  members_only: "boolean", paid: "boolean")
+    end
+  end
+end
+
+
+
+
+
+binding.pry
 
 
 #!!! ALL OCCURS WITHIN THE LOOP OF AN INDIVIDUAL CLASS
@@ -34,11 +74,6 @@ gym = Organization.where(name: "Sports Club LA")
 #!!! ALL OCCURS WITHIN THE LOOP OF AN INDIVIDUAL CLASS
 
 
-
-
-
-# schedule_links = {"Boston" => "http://schedules.sportsclubla.com/?club=1", "Chestnut Hill" => "http://schedules.sportsclubla.com/?club=7", "San Francisco" => "http://schedules.sportsclubla.com/?club=5"}
-
 # @weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
@@ -54,15 +89,7 @@ gym = Organization.where(name: "Sports Club LA")
 #     class_counter = 0
 #     number_of_classes.times do
 #       begin
-#         title = doc.css("##{day}").css('.class')[class_counter].css('.name').text.gsub('*', '')
-#         paid_class = doc.css("##{day}").css('.class')[class_counter].css('.name').text.include?('**') ? TRUE : FALSE
-#         class_location = doc.css("##{day}").css('.class')[class_counter].css('.studio').text
-#         instructor = doc.css("##{day}").css('.class')[class_counter].css('.instructor').text.gsub('*', '').gsub('Sub: ','')
-#         personal_trainer = doc.css("##{day}").css('.class')[class_counter].css('.instructor').text.include?('*') ? TRUE : FALSE
-#         substitute = doc.css("##{day}").css('.class')[class_counter].css('.instructor').text.include?('Sub') ? TRUE : FALSE
-#         start_time = doc.css("##{day}").css('.class')[0].css('.time').text.split[0].gsub('am', ' AM').gsub('pm', ' PM')
-#         end_time = doc.css("##{day}").css('.class')[0].css('.time').text.split[2].gsub('am', ' AM').gsub('pm', ' PM')
-#         level = doc.css("##{day}").css('.class')[0].css('.level').text
+#         
         
         
 #         class_description = Nokogiri::HTML(open(doc.css("##{day}").css('.class')[class_counter].css('.instructor').css('a').attr('href').value)).css('#content').css('p').text

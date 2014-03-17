@@ -45,6 +45,7 @@ Course
     description (text)
     room_location (text)
     level (text)
+    categories (text), array 
     members_only (boolean)
     paid (boolean)
     gym_id (integer); belongs to gym
@@ -61,6 +62,8 @@ Gym
     hours (text), array, [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday] respectively
     url (text)
     course_url (text)
+    mbo_url (text)
+    private_training (integer) (1=yes, 2=no, 3=only private training)
     mbo_id (integer)
     scrape_freq (integer)
     organization_id (integer); belongs to organization
