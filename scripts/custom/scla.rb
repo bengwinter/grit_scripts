@@ -17,8 +17,11 @@ browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
   browser.goto gym["course_url"]
+  sleep (5.0)
   @week.each do |day|
-    @class_date = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','') + '/' + Time.now.year.to_s
+    @year = Time.now.year
+    @month = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[0].to_i
+    @day = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[1].to_i
     browser.div(css: "##{day}").divs(css: '.class').each do |course|
       begin
         course_data = Nokogiri::HTML(course.html)
@@ -32,6 +35,7 @@ org.gyms.each do |gym|
           categories = course_data.css('div')[0].attributes["class"].value.split
           members_only = TRUE
           description = Nokogiri::HTML(open(course_data.css('a').attr('href').value)).css('#content').css('p').text
+          sleep (0.7)
 
           @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid)
           @course_creations += 1
@@ -64,6 +68,7 @@ org.gyms.each do |gym|
           zip_code = "Not Provided"
           raw_description = Nokogiri::HTML(open(course_data.css('.name').css('a').attr('href').value)).css('#content').css('p').text
           description = raw_description
+          sleep(1.1)
           @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, substitute: substitute, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: description, raw_description: raw_description)
           @instructor_creations += 1
         else
@@ -77,9 +82,9 @@ org.gyms.each do |gym|
 
       #section
       begin
-        start_time = course_data.css('.time').text.split[0].gsub('am', ' AM').gsub('pm', ' PM')
-        end_time = course_data.css('.time').text.split[2].gsub('am', ' AM').gsub('pm', ' PM')
-        duration = ""
+        start_time = Time.new(@year, @month, @day, course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[1], 0, gym.time_offset)
+        end_time = Time.new(@year, @month, @day, course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.time_offset)
+        duration = (end_time - start_time) / 60
         class_date = @class_date
         room_location = course_data.css('.studio').text
         
