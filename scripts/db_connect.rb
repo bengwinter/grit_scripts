@@ -7,6 +7,7 @@ require 'pry'
 require 'active_record'
 require 'json'
 require 'date'
+require 'chronic'
 require 'open-uri'
 
 ActiveRecord::Base.establish_connection(
@@ -75,3 +76,4 @@ class Section < ActiveRecord::Base
   validates_uniqueness_of :course_id, scope: [:class_date, :start_time, :end_time, :instructor_id]
 
 end
+

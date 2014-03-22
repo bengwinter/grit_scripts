@@ -1,3 +1,6 @@
 
 2014-03-18 14:48:53 -0400; Course Creations: 182, Course Duplications: 179, Course Errors: 0, Instructor Creations: 135, Instructor Duplications: 226, Instructor Errors: 0, Section Creations: 0, Section Duplications: 0, Section Errors: 361
 2014-03-18 15:00:41 -0400; Course Creations: 182, Course Duplications: 179, Course Errors: 0, Instructor Creations: 135, Instructor Duplications: 226, Instructor Errors: 0, Section Creations: 361, Section Duplications: 0, Section Errors: 0
+#<Gym:0x007f8c21976850> at 2014-03-22 18:50:42 -0400; Course Creations: 63, Course Duplications: 75, Course Errors: 0, Instructor Creations: 54, Instructor Duplications: 84, Instructor Errors: 0, Section Creations: 138, Section Duplications: 0, Section Errors: 0
+#<Gym:0x007f8c22bb30b8> at 2014-03-22 18:52:27 -0400; Course Creations: 117, Course Duplications: 122, Course Errors: 0, Instructor Creations: 89, Instructor Duplications: 150, Instructor Errors: 0, Section Creations: 239, Section Duplications: 0, Section Errors: 0
+#<Gym:0x007f8c22bb2848> at 2014-03-22 18:54:44 -0400; Course Creations: 182, Course Duplications: 179, Course Errors: 0, Instructor Creations: 133, Instructor Duplications: 228, Instructor Errors: 0, Section Creations: 361, Section Duplications: 0, Section Errors: 0

@@ -10,146 +10,154 @@ require_relative '../db_connect.rb'
 @section_duplications = 0
 @section_errors = 0
 
- # start_date = Date.today # your start
- # end_date = Date.today + 1.year # your end
- # my_days = [1,2,3] # day of the week in 0-6. Sunday is day-of-week 0; Saturday is day-of-week 6.
- # result = (start_date..end_date).to_a.select {|k| my_days.include?(k.wday)}
-
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 org = Organization.where(name: "Equinox")[0]
-browser = Watir::Browser.new :firefox
+browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
+  sleep(4.2)
   browser.goto gym["course_url"]
 
-  #collect categories for courses
-  # @course_categories = {}
+  ##collect course categories
+  @category_by_courses = {}
 
-  # @category_key = {}
-  # @category_key["1"] = "cardio"
-  # @category_key["3"] = "conditioning"
-  # @category_key["110"] = "conscious_movement"
-  # @category_key["2"] = "martial_arts"
-  # @category_key["4"] = "mind_body"
-  # @category_key["105"] = "pilates"
-  # @category_key["6"] = "studio_cycling"
-  # @category_key["104"] = "yoga"
+  @category_key = {}
+  @category_key["1"] = "cardio"
+  @category_key["2"] = "martial_arts"
+  @category_key["3"] = "conditioning"
+  @category_key["4"] = "mind_body"
+  @category_key["5"] = "pool_programs"
+  @category_key["6"] = "studio_cycling"
+  @category_key["104"] = "yoga"
+  @category_key["105"] = "pilates"
+  @category_key["106"] = "dance"
+  @category_key["110"] = "conscious_movement"
   
-  # @categories = ["1", "3", "110", "2", "4", "105", "6", "104"]
-  
-  # @categories.each do |category|
-  #   browser.select_list(:id, "ClassCategoryId").select_value(category)
-  #     #do a nokogiri scrape of the whole page, grab the titles and mark down which category scrape was each and then at the end create a categories array for each course title based upon when they appeared on screen
-  #      doc = Nokogiri::HTML(open(broswer.divs(css: '.class-detail').html))
-  # end
-  
-  browser.select_list(:id, "ClassCategoryId").select_value("1")
+  @category_key.each do |category_id, category_name|
+    begin
+      browser.select_list(:id, "ClassCategoryId").select_value(category_id)
+      schedule = Nokogiri::HTML(browser.table(css: '.class-schedule').html)
+      schedule.css('.class-detail').css('a').each do |course|
+        class_title = course.children.text.gsub('*','').strip
+        if @category_by_courses["#{class_title}"] != nil
+          @category_by_courses["#{class_title}"] << category_name
+          @category_by_courses["#{class_title}"].uniq!
+        else 
+          @category_by_courses["#{class_title}"] = []
+          @category_by_courses["#{class_title}"] << category_name
+        end
+      end
+      sleep(1.2)
+    rescue
+    end
+  end
 
-  binding.pry
   browser.goto gym["course_url"]
-  #always scrape on Sunday for Following week so set first day equal ot the mondya after Time.now.day
+  browser.as(class: 'btn-close')[0].click
+  
+  @day_counter = 0
+  today = Date.today
+  next_monday = today += 1 + ((0 - today.wday) % 7)
+  @dates = []
+  3.times do
+    @dates << next_monday << (next_monday + 1) << (next_monday + 2) << (next_monday + 3) << (next_monday + 4) << (next_monday + 5) << (next_monday + 6)
+  end
 
-  broswer.divs(css: '.class-detail').each do |block|
-    @day_counter = 0
-    block.lis.each do |course|
-      @day_of_week = @week[day_counter % 7]
-      title = ""
-      level = ""
-      description = ""
-      categories = ""
-      members_only = TRUE
-      paid = FALSE
+  browser.elements(css: 'td.class-detail').each do |x|
+    @year = @dates[@day_counter].year
+    @month = @dates[@day_counter].month
+    @day = @dates[@day_counter].day
 
+    x.lis.each do |li|
+      course_data = Nokogiri::HTML(li.html).css("li")
+      
+      ##course
+      begin
+        title = course_data.children[0].text.gsub('*','').strip
+        level = "No Level" ##no website identifier for levels
+          if gym.courses.where(title: title, level: level) == []
+            paid = FALSE ##no website identifier for payment
+            categories = @category_by_courses["#{title}"]
+            members_only = TRUE ##no website identifier, assuming members only
+            
+            ##grabbing values from pop up including the instructor
+            li.a.click
+              raw_class_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[1].html)
+              class_description = raw_class_description.css('p').text
+              raw_instructor_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[2].html)
+              instructor_description = raw_instructor_description.css('p').text
+              if instructor_description == ""
+                instructor_description = ""
+              else
+              end
+            browser.div(css: '.overlay').link(css: '.overlayclose').click
+            
+            @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid)
+            @course_creations += 1
+            sleep (0.7)
+          else 
+            @course = gym.courses.where(title: title, level: level).first
+            @course_duplications += 1
+          end
+      rescue
+        @course_errors += 1
+      end
 
-      gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid)
+      ##instructor
+      begin
+        first_name = course_data.children[2].text.split[0].strip
+        last_name = course_data.children[2].text.split[1].strip
+        phone_number = "Equniox" ##no number provided
+        binding.pry
 
+        if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
+          personal_trainer = TRUE ##not provided so assuming all teachers are available for personal training
+          cerifications = []
+          accomplishments = []
+          philosophy = "Not Provided"
+          gender = "Not Provided"
+          birthday = "Not Provided"
+          email = "Not Provided"
+          address = "Not Provided"
+          city = "Not Provided"
+          state = "Not Provided"
+          zip_code = "Not Provided"
+
+          @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: instructor_description, raw_description: raw_instructor_description)
+          @instructor_creations += 1
+          sleep(1.1)
+        else
+          @instructor = Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number).first
+          @instructor_duplications += 1
+        end
+      rescue
+        @instructor_errors += 1
+      end    
+
+      ##section
+      begin
+        start_time = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[0].split(':')[0], course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
+        end_time = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
+        duration = (end_time - start_time) / 60
+        class_date = Date.new(@year, @month, @day)
+        room_location = "Not Provided"
+        substitute = course_data.children[2].text.include?('(SUB)') ? TRUE : FALSE
+
+        ##may need something here to not create classes that are for days in months that are not in current month. need to see how/when equinox changes their schedule
+        if @course.sections.where(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id) == []
+          @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: subtitute)
+          @section_creations += 1
+        else
+          @section_duplications += 1
+        end
+      rescue
+        @section_errors += 1
+      end
+      puts @course_creations
+      puts @instructor_creations
+      puts @section_creations
     end
     @day_counter += 1
   end
+  File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/equinox_logs.txt', 'ab') {|file| file.puts("#{gym} at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
 end
-
-
-#   binding.pry
-  
-#   browser.div(css: "##{day}").divs(css: '.class').each do |course|
-#       begin
-#         course_data = Nokogiri::HTML(course.html)
-
-#         #course
-#         title = course_data.css('.name').text.gsub('*', '')
-#         level = course_data.css('.level').text + ": " + course_data.css('.level')[0].attributes["title"].text
-
-#         if gym.courses.where(title: title, level: level) == []
-#           paid = course_data.css('.name').text.include?('**') ? TRUE : FALSE
-#           categories = course_data.css('div')[0].attributes["class"].value.split
-#           members_only = TRUE
-#           description = Nokogiri::HTML(open(course_data.css('a').attr('href').value)).css('#content').css('p').text
-#           sleep (0.7)
-
-#           @course = 
-#           @course_creations += 1
-#         else 
-#           @course = gym.courses.where(title: title, level: level).first
-#           @course_duplications += 1
-#         end
-#       rescue
-#         @course_errors += 1
-#       end
-
-#       #instructor
-#       begin
-#         first_name = course_data.css('.instructor').text.gsub('*', '').gsub('Sub: ','').split[0]
-#         last_name = course_data.css('.instructor').text.gsub('*', '').gsub('Sub: ','').split[1]
-#         phone_number = "SCLA"
-
-#         if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
-#           personal_trainer = course_data.css('.instructor').text.include?('*') ? TRUE : FALSE
-#           substitute = course_data.css('.instructor').text.include?('Sub') ? TRUE : FALSE
-#           cerifications = []
-#           accomplishments = []
-#           philosophy = "Not Provided"
-#           gender = "Not Provided"
-#           birthday = "Not Provided"
-#           email = "Not Provided"
-#           address = "Not Provided"
-#           city = "Not Provided"
-#           state = "Not Provided"
-#           zip_code = "Not Provided"
-#           raw_description = Nokogiri::HTML(open(course_data.css('.name').css('a').attr('href').value)).css('#content').css('p').text
-#           description = raw_description
-#           sleep(1.1)
-#           @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, substitute: substitute, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: description, raw_description: raw_description)
-#           @instructor_creations += 1
-#         else
-#           @instructor = Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number).first
-#           @instructor_duplications += 1
-          
-#         end
-#       rescue
-#         @instructor_errors += 1
-#       end
-
-#       #section
-#       begin
-#         start_time = Time.new(@year, @month, @day, course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
-#         end_time = Time.new(@year, @month, @day, course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
-#         duration = (end_time - start_time) / 60
-#         class_date = Date.new(@year, @month, @day)
-#         room_location = course_data.css('.studio').text
-     
-#         if @course.sections.where(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id) == []
-#           @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration)
-#           @section_creations += 1
-#         else
-#           @section_duplications += 1
-#         end
-#       rescue
-#         binding.pry
-#         @section_errors += 1
-#       end
-     
-#   end
-# end
-
-
-# File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/equinox_logs.txt', 'ab') {|file| file.puts("#{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
