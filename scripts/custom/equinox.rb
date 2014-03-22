@@ -69,6 +69,7 @@ org.gyms.each do |gym|
     @day = @dates[@day_counter].day
 
     x.lis.each do |li|
+      binding.pry
       course_data = Nokogiri::HTML(li.html).css("li")
       
       ##course
@@ -84,8 +85,8 @@ org.gyms.each do |gym|
             li.a.click
               raw_class_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[1].html)
               class_description = raw_class_description.css('p').text
-              raw_instructor_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[2].html)
-              instructor_description = raw_instructor_description.css('p').text
+              raw_instructor_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[2].html).css('p').text
+              instructor_description = raw_instructor_description
               if instructor_description == ""
                 instructor_description = ""
               else
@@ -108,7 +109,6 @@ org.gyms.each do |gym|
         first_name = course_data.children[2].text.split[0].strip
         last_name = course_data.children[2].text.split[1].strip
         phone_number = "Equniox" ##no number provided
-        binding.pry
 
         if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
           personal_trainer = TRUE ##not provided so assuming all teachers are available for personal training
@@ -123,7 +123,7 @@ org.gyms.each do |gym|
           state = "Not Provided"
           zip_code = "Not Provided"
 
-          @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: instructor_description, raw_description: raw_instructor_description)
+          @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: @instructor_description, raw_description: @raw_instructor_description)
           @instructor_creations += 1
           sleep(1.1)
         else
@@ -142,10 +142,10 @@ org.gyms.each do |gym|
         class_date = Date.new(@year, @month, @day)
         room_location = "Not Provided"
         substitute = course_data.children[2].text.include?('(SUB)') ? TRUE : FALSE
-
+        binding.pry
         ##may need something here to not create classes that are for days in months that are not in current month. need to see how/when equinox changes their schedule
         if @course.sections.where(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id) == []
-          @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: subtitute)
+          @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute)
           @section_creations += 1
         else
           @section_duplications += 1
