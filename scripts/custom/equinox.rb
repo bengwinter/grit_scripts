@@ -12,7 +12,7 @@ require_relative '../db_connect.rb'
 
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 org = Organization.where(name: "Equinox")[0]
-browser = Watir::Browser.new :phantomjs
+browser = Watir::Browser.new :firefox
 
 org.gyms.each do |gym|
   sleep(4.2)
@@ -69,7 +69,6 @@ org.gyms.each do |gym|
     @day = @dates[@day_counter].day
 
     x.lis.each do |li|
-      binding.pry
       course_data = Nokogiri::HTML(li.html).css("li")
       
       ##course
@@ -142,7 +141,7 @@ org.gyms.each do |gym|
         class_date = Date.new(@year, @month, @day)
         room_location = "Not Provided"
         substitute = course_data.children[2].text.include?('(SUB)') ? TRUE : FALSE
-        binding.pry
+
         ##may need something here to not create classes that are for days in months that are not in current month. need to see how/when equinox changes their schedule
         if @course.sections.where(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id) == []
           @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute)
@@ -153,9 +152,6 @@ org.gyms.each do |gym|
       rescue
         @section_errors += 1
       end
-      puts @course_creations
-      puts @instructor_creations
-      puts @section_creations
     end
     @day_counter += 1
   end
