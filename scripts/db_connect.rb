@@ -7,7 +7,6 @@ require 'pry'
 require 'active_record'
 require 'json'
 require 'date'
-require 'chronic'
 require 'open-uri'
 
 ActiveRecord::Base.establish_connection(

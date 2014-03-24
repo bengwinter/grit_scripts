@@ -36,6 +36,7 @@ org.gyms.each do |gym|
   @category_key.each do |category_id, category_name|
     begin
       browser.select_list(:id, "ClassCategoryId").select_value(category_id)
+      sleep(2.2)
       schedule = Nokogiri::HTML(browser.table(css: '.class-schedule').html)
       schedule.css('.class-detail').css('a').each do |course|
         class_title = course.children.text.gsub('*','').strip
@@ -47,7 +48,6 @@ org.gyms.each do |gym|
           @category_by_courses["#{class_title}"] << category_name
         end
       end
-      sleep(1.2)
     rescue
     end
   end
