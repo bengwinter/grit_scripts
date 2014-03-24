@@ -9,11 +9,14 @@ require 'watir'
 require 'watir-webdriver'
 
 
-cities = {"CAMBRIDGE" => "US|MA", "BROOKLINE" => "US|MA", "BROOKLINE & CAMBRIDGE" => "US|MA", "SOMMERVILLE" => "US|MA", "SOMERVILLE" => "US|MA", "ALLSTON" => "US|MA", "JAMAICA PLAIN" => "US|MA", "JAMAICA PLAINS" => "US|MA", "SOUTH BOSTON" => "US|MA", "CHARLESTOWN" => "US|MA", "ALLSTON" => "US|MA", "CHESTNUT HILL" => "US|MA", "CHESTNUTT HILL" => "US|MA", "NEWTON" => "US|MA", "NEWTON CENTRE" => "US|MA", "NEWTON CENTER" => "US|MA", "NEWTON HIGHLANDS" => "US|MA", "NEWTONVILLE" => "US|MA", "MEDFORD" => "US|MA", "NATICK" => "US|MA", "WATERTOWN" => "US|MA", "WELLESLEY" => "US|MA", "WELLESEY" => "US|MA", "WEST NEWTON" => "US|MA", "WELLESLEY HILLS" => "US|MA", "NEEDHAM" => "US|MA", "NEEDHAM HEIGHTS" => "US|MA", "BOSTON, MEDFIELD, NEWTON" => "US|MA"}
-@location = {"BOSTON" => "Boston", "CAMBRIDGE" => "Cambridge", "BROOKLINE" => "Brookline", "BROOKLINE & CAMBRIDGE" => "Brookline/Cambridge", ""}
-industries = {"OS" => "Yoga", "PS" => "Pilates", "FI" => "Health Club", "SS" => "Dance", "PT" => "Personal Trainer", "MA" => "Martial Arts", "WC" => "Wellness/Health Center", "O" => "Other"}
+#"CAMBRIDGE" => "US|MA", "BROOKLINE" => "US|MA", "BROOKLINE & CAMBRIDGE" => "US|MA", "SOMMERVILLE" => "US|MA", "SOMERVILLE" => "US|MA", "ALLSTON" => "US|MA", "JAMAICA PLAIN" => "US|MA", "JAMAICA PLAINS" => "US|MA", "SOUTH BOSTON" => "US|MA",     
+#{}"BOSTON" => "Boston", "CAMBRIDGE" => "Cambridge", "BROOKLINE" => "Brookline", "BROOKLINE & CAMBRIDGE" => "Brookline/Cambridge", "SOMMERVILLE" => "Somverville", "SOMERVILLE" => "Somverville", "ALLSTON" => "Allston", "JAMAICA PLAIN" => "Jamica Plains", "JAMAICA PLAINS" => "Jamica Plains", "SOUTH BOSTON" => "South Boston", 
 
-browser = Watir::Browser.new :firefox
+cities = {"CHARLESTOWN" => "US|MA", "CHESTNUT HILL" => "US|MA", "CHESTNUTT HILL" => "US|MA", "NEWTON" => "US|MA", "NEWTON CENTRE" => "US|MA", "NEWTON CENTER" => "US|MA", "NEWTON HIGHLANDS" => "US|MA", "NEWTONVILLE" => "US|MA", "MEDFORD" => "US|MA", "NATICK" => "US|MA", "WATERTOWN" => "US|MA", "WELLESLEY" => "US|MA", "WELLESEY" => "US|MA", "WEST NEWTON" => "US|MA", "WELLESLEY HILLS" => "US|MA", "NEEDHAM" => "US|MA", "NEEDHAM HEIGHTS" => "US|MA", "BOSTON, MEDFIELD, NEWTON" => "US|MA"}
+@location = {"CHARLESTOWN" => "Charlestown", "CHESTNUT HILL" => "Chestnut Hill", "CHESTNUTT HILL" => "Chestnut Hill", "NEWTON" => "Newton", "NEWTON CENTRE" => "Newton", "NEWTON CENTER" => "Newton", "NEWTON HIGHLANDS" => "Newton", "NEWTONVILLE" => "Newton", "MEDFORD" => "Medford", "NATICK" => "Natick", "WATERTOWN" => "Watertown", "WELLESLEY" => "Wellesley", "WELLESEY" => "Wellesley", "WEST NEWTON" => "Newton", "WELLESLEY HILLS" => "Wellesley", "NEEDHAM" => "Needham", "NEEDHAM HEIGHTS" => "Needham", "BOSTON, MEDFIELD, NEWTON" => "Boston/Newton"}
+industries = {"All" => "All", "OS" => "Yoga", "PS" => "Pilates", "FI" => "Health Club", "SS" => "Dance", "PT" => "Personal Trainer", "MA" => "Martial Arts", "WC" => "Wellness/Health Center", "O" => "Other"}
+
+browser = Watir::Browser.new :phantomjs
 browser.goto 'https://clients.mindbodyonline.com/ASP/finder.asp'
 sleep(2.0)
 browser.frame.select_list(css: '#Select1').select_value("US")
@@ -24,12 +27,11 @@ cities.each do |city, state|
   sleep(1.0)
   browser.frame.select_list(css: '#optCity').select_value(city)
   industries.each do |code, industry|
-    if skip_count = 0
+    if skip_count == 0
     else
       browser.frame.select_list(name: 'optSWType').select_value(code)
       sleep(1.0)
     end
-    binding.pry
     browser.frame.input(type: "submit").click
     until browser.frame.h3(text: "Live Online Clients").parent.table.tbody.tr.td.exists? do
       sleep(1.0)
@@ -58,11 +60,11 @@ cities.each do |city, state|
         gym_hash[:zip_code] = "" 
         gym_hash[:phone_number] = ""
         gym_hash[:hours] = "" 
-        gym_hash[:url] = doc.css('tbody')[1].children[y].children[0].children[1].attributes['href'].value
+        gym_hash[:url] = ""
         gym_hash[:course_url] = "" 
         gym_hash[:mbo_url] = doc.css('tbody')[1].children[y].children[2].children[1].children[1].attributes['href'].value
         gym_hash[:industry] = industry
-        gym_hash[:mbo_id] = gym_hash[:mbo_url][(organization_hash[:mbo_url].index('=') + 1), (organization_hash[:mbo_url].length - 1)]
+        gym_hash[:mbo_id] = gym_hash[:mbo_url][(gym_hash[:mbo_url].index('=') + 1), (gym_hash[:mbo_url].length - 1)]
         gym_hash[:scrape_freq] = 0
 
         File.open("./gyms.json","ab") do |f|
@@ -75,6 +77,7 @@ cities.each do |city, state|
       x += 1
       begin
         browser.frame.link(href: "javascript:goToPage(#{x.to_s});").click
+        sleep(5.0)
       rescue
       end
     end
