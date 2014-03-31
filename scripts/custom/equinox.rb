@@ -12,7 +12,7 @@ require_relative '../db_connect.rb'
 
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 org = Organization.where(name: "Equinox")[0]
-browser = Watir::Browser.new :firefox
+browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
   sleep(4.2)
@@ -79,7 +79,7 @@ org.gyms.each do |gym|
             paid = FALSE ##no website identifier for payment
             categories = @category_by_courses["#{title}"]
             members_only = TRUE ##no website identifier, assuming members only
-            sign_up = FALSE ##no website identifier, assuming sign up not needed
+            signup = FALSE ##no website identifier, assuming sign up not needed
             size = 0 ##no website identifier
             
             ##grabbing values from pop up including the instructor
@@ -94,7 +94,7 @@ org.gyms.each do |gym|
               end
             browser.div(css: '.overlay').link(css: '.overlayclose').click
             
-            @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid, sign_up: sign_up, size: size)
+            @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid, signup: signup, size: size)
             @course_creations += 1
             sleep (0.7)
           else 
@@ -157,5 +157,5 @@ org.gyms.each do |gym|
     end
     @day_counter += 1
   end
-  File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/equinox_logs.txt', 'ab') {|file| file.puts("#{gym} at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
+  File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/equinox_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
 end

@@ -37,10 +37,10 @@ org.gyms.each do |gym|
           categories = course_data.css('div')[0].attributes["class"].value.split
           members_only = TRUE ##no website identifier, assuming members only
           description = Nokogiri::HTML(open(course_data.css('a').attr('href').value)).css('#content').css('p').text
-          sign_up = FALSE ##no website identifier, assuming sign up not needed
+          signup = FALSE ##no website identifier, assuming sign up not needed
           size = 0 ##no website identifier
 
-          @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid, sign_up: sign_up, size: size)
+          @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid, signup: signup, size: size)
           @course_creations += 1
           sleep(0.7)
         else 
@@ -105,7 +105,7 @@ org.gyms.each do |gym|
      
     end
   end
-  File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/scla_logs.txt', 'ab') {|file| file.puts("#{gym} at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
+  File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/scla_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
 end
 
 
