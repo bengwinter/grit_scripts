@@ -5,8 +5,7 @@ require 'date'
 require 'open-uri'
 
 
-json = JSON.parse(IO.read("/Users/benwinter/Code/Shelton/production_code/data_collection/data/mbo_scrape/gyms.json"))
-
+json = JSON.parse(IO.read("/Users/benwinter/Code/Shelton/production_code/data_collection/mbo_gymlist_scrape/gyms.json"))
 
 csv_array = []
 

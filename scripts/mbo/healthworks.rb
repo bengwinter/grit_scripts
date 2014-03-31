@@ -14,16 +14,28 @@ require_relative '../db_connect.rb'
 
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-org = Organization.where(name: "Sports Club LA")[0]
-browser = Watir::Browser.new :phantomjs
+org = Organization.where(name: "Healthworks Fitness Centers for Women")[0]
+browser = Watir::Browser.new :firefox
 
 org.gyms.each do |gym|
   browser.goto gym["course_url"]
-  sleep(5.0)
+  sleep (8.0)
+  browser.iframe.trs.each do |row|
+    data = Nokogiri::HTML(row.html)
+
+    if data.css('.hc_date') != []
+      binding.pry
+      # @year = Time.now.year
+      # @month = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[0].to_i
+      # @day = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[1].to_i
+    else
+    end
+    binding.pry
+
+  end
+
   @week.each do |day|
-    @year = Time.now.year
-    @month = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[0].to_i
-    @day = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[1].to_i
+    
     browser.div(css: "##{day}").divs(css: '.class').each do |course|
       begin
         course_data = Nokogiri::HTML(course.html)
@@ -40,7 +52,7 @@ org.gyms.each do |gym|
 
           @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid)
           @course_creations += 1
-          sleep(0.7)
+          sleep (0.7)
         else 
           @course = gym.courses.where(title: title, level: level).first
           @course_duplications += 1
@@ -106,4 +118,44 @@ org.gyms.each do |gym|
   File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/scla_logs.txt', 'ab') {|file| file.puts("#{gym} at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
 end
 
+
+@all_class_details = []
+browser.frame.elements(css: '.evenRow').each do |x|
+  @all_class_details << Nokogiri::HTML.parse(x.html).css('td')
+end
+
+browser.frame.elements(css: '.oddRow').each do |x|
+  @all_class_details << Nokogiri::HTML.parse(x.html).css('td')
+end
+
+@all_instructor_descriptions = []
+browser.frame.elements(css: '.modalBio').each do |bio|
+  bio.click
+  bio_hash = {}
+  sleep(1.0)
+  bio_hash["#{bio.text}"] = Nokogiri::HTML(browser.frame.when_present.div(class: 'bio').html)
+  @all_instructor_descriptions << bio_hash
+end
+
+
+@all_class_descriptions = []
+browser.frame.elements(css: '.modalClassDesc').each do |description|
+  description.click
+  description_hash = {}
+  sleep (1.0)
+  description_hash["#{description.text}"] = Nokogiri::HTML(browser.frame.when_present.div(class: 'classDescription').html).css('div').children[1].text
+  @all_class_descriptions << description_hash 
+end
+
+
+
+@all_class_details.each do |y|
+  start_time = y[0].text
+  duration = y[6].text
+  #end_time = some function of start time and duration
+  title = y[2].text
+  class_location = y[5].text
+  instructor_name_short = y[3].text
+  gym_location = y[4].text
+end
 

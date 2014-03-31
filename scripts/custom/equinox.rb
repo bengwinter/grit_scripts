@@ -12,7 +12,7 @@ require_relative '../db_connect.rb'
 
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 org = Organization.where(name: "Equinox")[0]
-browser = Watir::Browser.new :phantomjs
+browser = Watir::Browser.new :firefox
 
 org.gyms.each do |gym|
   sleep(4.2)
