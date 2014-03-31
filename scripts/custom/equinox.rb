@@ -79,6 +79,8 @@ org.gyms.each do |gym|
             paid = FALSE ##no website identifier for payment
             categories = @category_by_courses["#{title}"]
             members_only = TRUE ##no website identifier, assuming members only
+            sign_up = FALSE ##no website identifier, assuming sign up not needed
+            size = 0 ##no website identifier
             
             ##grabbing values from pop up including the instructor
             li.a.click
@@ -92,7 +94,7 @@ org.gyms.each do |gym|
               end
             browser.div(css: '.overlay').link(css: '.overlayclose').click
             
-            @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid)
+            @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid, sign_up: sign_up, size: size)
             @course_creations += 1
             sleep (0.7)
           else 

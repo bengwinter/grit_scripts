@@ -37,8 +37,10 @@ org.gyms.each do |gym|
           categories = course_data.css('div')[0].attributes["class"].value.split
           members_only = TRUE ##no website identifier, assuming members only
           description = Nokogiri::HTML(open(course_data.css('a').attr('href').value)).css('#content').css('p').text
+          sign_up = FALSE ##no website identifier, assuming sign up not needed
+          size = 0 ##no website identifier
 
-          @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid)
+          @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid, sign_up: sign_up, size: size)
           @course_creations += 1
           sleep(0.7)
         else 
