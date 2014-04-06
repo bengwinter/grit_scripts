@@ -37,15 +37,13 @@ org.gyms.each do |gym|
           paid = "Not Provided"
           categories = data.css('.visit_type').css('span').text.strip
           members_only = TRUE ##no website identifier, assuming members only
-          signup = data.css('.signup_now').length != 0 ? TRUE : FALSE
-          size = 0 ##no website identifier
           
           course_popup = Watir::Browser.new :phantomjs
           course_popup.goto data.css('.classname').css('a')[0].attr('data-url')
             description = course_popup.div(css: '.class_description').text
           course_popup.close
 
-          @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid, signup: signup, size: size)
+          @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid)
           @course_creations += 1
           sleep (0.7)
         else 
@@ -78,7 +76,7 @@ org.gyms.each do |gym|
             state = "Not Provided"
             zip_code = "Not Provided"
             raw_description = instructor_popup.div(css: '.trainer_bio').text
-            description = "See Raw Description"
+            description = ""
           instructor_popup.close
             
           
@@ -95,16 +93,19 @@ org.gyms.each do |gym|
       
       ##section
       begin
-        start_time = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
-        end_time = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
-        duration = (end_time - start_time) / 60
+        start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
+        end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
+        start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
+        end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
+        duration = (end_time_utc - start_time_utc) / 60
         class_date = Date.new(@year, @month, @day)
         substitute = FALSE
-
         room_location = "Not Provided"
+        signup = data.css('.signup_now').length != 0 ? TRUE : FALSE
+        size = 0 ##no website identifier
      
-        if @course.sections.where(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id) == []
-          @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute)
+        if @course.sections.where(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc, instructor_id: @instructor.id) == []
+          @course.sections.create(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc, start_time_local: start_time_local, end_time_local: end_time_local, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute, signup: signup, size: size)
           @section_creations += 1
         else
           @section_duplications += 1
@@ -115,5 +116,5 @@ org.gyms.each do |gym|
      
     end
   end
-  File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/healthworks_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
+  File.open('/Users/benwinter/Code/Gritsy/production_code/data_collection/logs/healthworks_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
 end

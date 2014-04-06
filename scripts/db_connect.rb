@@ -68,11 +68,11 @@ class Section < ActiveRecord::Base
   has_many :appointments
   
   #add uniquness for combination of date, start time and end time, should not be any duplicates for the combination of those three
-  validates_presence_of :start_time
-  validates_presence_of :end_time
+  validates_presence_of :start_time_utc
+  validates_presence_of :end_time_utc
   validates_presence_of :class_date
   validates_presence_of :room_location
-  validates_uniqueness_of :course_id, scope: [:class_date, :start_time, :end_time, :instructor_id]
+  validates_uniqueness_of :course_id, scope: [:class_date, :start_time_utc, :end_time_utc, :instructor_id]
 
 end
 

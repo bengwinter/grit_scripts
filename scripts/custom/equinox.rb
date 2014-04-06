@@ -85,8 +85,7 @@ org.gyms.each do |gym|
               raw_class_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[1].html)
               class_description = raw_class_description.css('p').text
               @raw_instructor_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[2].html).css('p').text
-              else
-              end
+
             browser.div(css: '.overlay').link(css: '.overlayclose').click
             
             @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid)
@@ -104,7 +103,7 @@ org.gyms.each do |gym|
       begin
         first_name = course_data.children[2].text.split[0].strip
         last_name = course_data.children[2].text.split[1].strip
-        phone_number = "Equniox" ##no number provided
+        phone_number = "Equinox" ##no number provided
 
         if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
           personal_trainer = TRUE ##not provided so assuming all teachers are available for personal training
@@ -141,22 +140,22 @@ org.gyms.each do |gym|
         class_date = Date.new(@year, @month, @day)
         signup = FALSE ##no website identifier, assuming sign up not needed
         size = 0 ##no website identifier
-
         room_location = "Not Provided"
         substitute = course_data.children[2].text.include?('(SUB)') ? TRUE : FALSE
 
         ##may need something here to not create classes that are for days in months that are not in current month. need to see how/when equinox changes their schedule
-        if @course.sections.where(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id) == []
-          @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute, signup: signup, size: size)
+        if @course.sections.where(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc, instructor_id: @instructor.id) == []
+          @course.sections.create(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc, start_time_local: start_time_local, end_time_local: end_time_local, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute, signup: signup, size: size)
           @section_creations += 1
         else
           @section_duplications += 1
         end
       rescue
+
         @section_errors += 1
       end
     end
     @day_counter += 1
   end
-  File.open('/Users/benwinter/Code/Shelton/production_code/data_collection/logs/equinox_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
+  File.open('/Users/benwinter/Code/Gritsy/production_code/data_collection/logs/equinox_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
 end
