@@ -79,22 +79,17 @@ org.gyms.each do |gym|
             paid = FALSE ##no website identifier for payment
             categories = @category_by_courses["#{title}"]
             members_only = TRUE ##no website identifier, assuming members only
-            signup = FALSE ##no website identifier, assuming sign up not needed
-            size = 0 ##no website identifier
             
             ##grabbing values from pop up including the instructor
             li.a.click
               raw_class_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[1].html)
               class_description = raw_class_description.css('p').text
-              raw_instructor_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[2].html).css('p').text
-              instructor_description = raw_instructor_description
-              if instructor_description == ""
-                instructor_description = ""
+              @raw_instructor_description = Nokogiri::HTML.parse(browser.divs(class: "about-copy")[2].html).css('p').text
               else
               end
             browser.div(css: '.overlay').link(css: '.overlayclose').click
             
-            @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid, signup: signup, size: size)
+            @course = gym.courses.create(title: title, level: level, description: class_description, categories: categories, members_only: members_only, paid: paid)
             @course_creations += 1
             sleep (0.7)
           else 
@@ -123,8 +118,9 @@ org.gyms.each do |gym|
           city = "Not Provided"
           state = "Not Provided"
           zip_code = "Not Provided"
+          instructor_description = ""
 
-          @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: @instructor_description, raw_description: @raw_instructor_description)
+          @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: instructor_description, raw_description: @raw_instructor_description)
           @instructor_creations += 1
           sleep(1.1)
         else
@@ -137,16 +133,21 @@ org.gyms.each do |gym|
 
       ##section
       begin
-        start_time = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[0].split(':')[0], course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
-        end_time = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
-        duration = (end_time - start_time) / 60
+        start_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[0].split(':')[0], course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
+        end_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
+        start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
+        end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
+        duration = (end_time_utc - start_time_utc) / 60
         class_date = Date.new(@year, @month, @day)
+        signup = FALSE ##no website identifier, assuming sign up not needed
+        size = 0 ##no website identifier
+
         room_location = "Not Provided"
         substitute = course_data.children[2].text.include?('(SUB)') ? TRUE : FALSE
 
         ##may need something here to not create classes that are for days in months that are not in current month. need to see how/when equinox changes their schedule
         if @course.sections.where(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id) == []
-          @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute)
+          @course.sections.create(class_date: class_date, start_time: start_time, end_time: end_time, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute, signup: signup, size: size)
           @section_creations += 1
         else
           @section_duplications += 1

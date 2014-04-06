@@ -15,7 +15,7 @@ require_relative '../db_connect.rb'
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 org = Organization.where(name: "Healthworks Fitness Centers for Women")[0]
-browser = Watir::Browser.new :firefox
+browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
   browser.goto gym["course_url"]
@@ -40,7 +40,7 @@ org.gyms.each do |gym|
           signup = data.css('.signup_now').length != 0 ? TRUE : FALSE
           size = 0 ##no website identifier
           
-          course_popup = Watir::Browser.new :firefox
+          course_popup = Watir::Browser.new :phantomjs
           course_popup.goto data.css('.classname').css('a')[0].attr('data-url')
             description = course_popup.div(css: '.class_description').text
           course_popup.close
@@ -65,9 +65,8 @@ org.gyms.each do |gym|
         if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
           personal_trainer = TRUE ##not provided so assuming all teachers are available for personal training
 
-          instructor_popup = Watir::Browser.new :firefox
+          instructor_popup = Watir::Browser.new :phantomjs
           instructor_popup.goto data.css('.trainer').css('a')[0].attr('data-url')
-            binding.pry
             cerifications = "See Raw Description"
             accomplishments = "See Raw Description"
             philosophy = "See Raw Description"
