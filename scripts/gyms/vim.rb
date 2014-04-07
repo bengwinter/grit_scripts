@@ -22,7 +22,19 @@ org.gyms.each do |gym|
     if course_url != ""
       browser.goto course_url
 
-      sleep (6.2)
+      if gym.address == "350 Massachusetts Avenue"
+        click_tag = ""
+      else
+        click_tag = ""
+      end
+
+      browser.frame.td(css: '#tabTD107').click
+
+      browser.frame.link(css: '.selectBox-dropdown').click
+
+      sleep(6.2)
+
+      binding.pry
 
       browser.div(css: '.schedule').trs.each do |row|
         data = Nokogiri::HTML(row.html)
@@ -54,6 +66,7 @@ org.gyms.each do |gym|
               categories = data.css('.visit_type').css('span').text.strip
               members_only = TRUE ##no website identifier, assuming members only
               
+              sleep(1.2)
               course_popup = Watir::Browser.new :phantomjs
               course_popup.goto data.css('.classname').css('a')[0].attr('data-url')
                 description = course_popup.div(css: '.class_description').text
@@ -79,7 +92,7 @@ org.gyms.each do |gym|
 
             if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
               personal_trainer = TRUE ##not provided so assuming all teachers are available for personal training
-
+              sleep(0.5)
               instructor_popup = Watir::Browser.new :phantomjs
               instructor_popup.goto data.css('.trainer').css('a')[0].attr('data-url')
                 cerifications = "See Raw Description"
