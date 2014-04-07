@@ -72,7 +72,7 @@ org.gyms.each do |gym|
       x.lis.each do |li|
         course_data = Nokogiri::HTML(li.html).css("li")
         
-        ##course
+      ##course
         begin
           title = course_data.children[0].text.gsub('*','').strip
           level = "No Level" ##no website identifier for levels
@@ -100,7 +100,7 @@ org.gyms.each do |gym|
           @course_errors += 1
         end
 
-        ##instructor
+      ##instructor
         begin
           first_name = course_data.children[2].text.split[0].strip
           last_name = course_data.children[2].text.split[1].strip
@@ -131,7 +131,7 @@ org.gyms.each do |gym|
           @instructor_errors += 1
         end    
 
-        ##section
+      ##section
         begin
           start_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[0].split(':')[0], course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
           end_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)

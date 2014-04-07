@@ -1,6 +1,5 @@
 require_relative '../db_connect.rb'
 
-#calendar changes on Sunday or Monday
 
 @course_creations = 0
 @course_duplications = 0
@@ -11,25 +10,27 @@ require_relative '../db_connect.rb'
 @section_creations = 0
 @section_duplications = 0
 @section_errors = 0
+@section_cancellations = 0
 
-@week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+# @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-org = Organization.where(name: "Healthworks Fitness Centers for Women")[0]
+org = Organization.where(name: "Cambridge Athletic Club")[0]
 browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
   gym["course_url"].each do |course_url|
     browser.goto course_url
 
-    sleep (8.0)
-    browser.iframe.trs.each do |row|
+    sleep (6.2)
+
+    browser.div(css: '.schedule').trs.each do |row|
       data = Nokogiri::HTML(row.html)
 
-    if data.css('.hc_date')[0] != nil
-      @year = Time.now.year
-      @month = Date::MONTHNAMES.index(data.css('.hc_date')[0].text.split(" ")[0])
-      @day = data.css('.hc_date')[0].text.split(" ")[1].to_i
-    elsif data.css('tr')[0].attributes["class"].value.include?("cancel")
+      if data.css('.schedule_header')[0] != nil
+        @year = Time.now.year
+        @month = Date::MONTHNAMES.index(data.css('.hc_date')[0].text.split(" ")[0])
+        @day = data.css('.hc_date')[0].text.split(" ")[1].to_i
+      elsif data.css('tr')[0].attributes["class"].value.include?("cancel")
         begin
           title = data.css('.classname').text.strip
           level = "Not Provided"
@@ -44,9 +45,9 @@ org.gyms.each do |gym|
           gym.courses.where(title: title, level: level)[0].sections.where(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc)[0].destroy
         rescue
         end
-    else
+      else
       ##course
-        begin
+        begin  
           title = data.css('.classname').text.strip
           level = "Not Provided"
 
@@ -63,6 +64,7 @@ org.gyms.each do |gym|
             @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid)
             @course_creations += 1
             sleep (0.7)
+
           else 
             @course = gym.courses.where(title: title, level: level).first
             @course_duplications += 1
@@ -71,11 +73,11 @@ org.gyms.each do |gym|
           @course_errors += 1
         end
 
-        ##instructor
+      ##instructor
         begin
           first_name = data.css('.trainer')[1].text.split(' ')[0]
           last_name = data.css('.trainer')[1].text.split(' ')[1]
-          phone_number = "Healthworks Fitness Centers for Women" #no number provided
+          phone_number = "Cambridge Athletic Center" #no number provided
 
           if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
             personal_trainer = TRUE ##not provided so assuming all teachers are available for personal training
@@ -108,7 +110,7 @@ org.gyms.each do |gym|
           @instructor_errors += 1
         end
         
-        ##section
+      #section
         begin
           start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
           end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
@@ -116,7 +118,7 @@ org.gyms.each do |gym|
           end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
           duration = (end_time_utc - start_time_utc) / 60
           class_date = Date.new(@year, @month, @day)
-          substitute = FALSE
+          substitute = data.css('.trainer')[1].text.include?('sub') ? TRUE : FALSE
           room_location = "Not Provided"
           signup = data.css('.signup_now').length != 0 ? TRUE : FALSE
           size = 0 ##no website identifier
@@ -133,6 +135,6 @@ org.gyms.each do |gym|
        
       end
     end
-    File.open('/Users/benwinter/Code/Gritsy/production_code/data_collection/logs/healthworks_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}")}
+    File.open('/Users/benwinter/Code/Gritsy/production_code/data_collection/logs/cac_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}, Section Cancellation: #{@section_cancellations}")}
   end
 end

@@ -27,10 +27,11 @@ org.gyms.each do |gym|
       @month = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[0].to_i
       @day = browser.div(css: "##{day}").div(css: '.dayname').span.text.gsub('(','').gsub(')','').split('/')[1].to_i
       browser.div(css: "##{day}").divs(css: '.class').each do |course|
+      
+      ##course
         begin
           course_data = Nokogiri::HTML(course.html)
 
-          ##course
           title = course_data.css('.name').text.gsub('*', '')
           level = course_data.css('.level').text + ": " + course_data.css('.level')[0].attributes["title"].text
 
@@ -52,7 +53,7 @@ org.gyms.each do |gym|
           @course_errors += 1
         end
 
-        ##instructor
+      ##instructor
         begin
           first_name = course_data.css('.instructor').text.gsub('*', '').gsub('Sub: ','').split[0]
           last_name = course_data.css('.instructor').text.gsub('*', '').gsub('Sub: ','').split[1]
@@ -84,7 +85,7 @@ org.gyms.each do |gym|
           @instructor_errors += 1
         end
 
-        ##section
+      ##section
         begin
           start_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
           end_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
