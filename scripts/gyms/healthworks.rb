@@ -19,7 +19,8 @@ browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
   gym["course_url"].each do |course_url|
-    browser.goto gym["course_url"]
+    browser.goto course_url
+
     sleep (8.0)
     browser.iframe.trs.each do |row|
       data = Nokogiri::HTML(row.html)

@@ -20,6 +20,7 @@ browser = Watir::Browser.new :phantomjs
 org.gyms.each do |gym|
   gym["course_url"].each do |course_url|
     browser.goto course_url
+
     sleep(5.0)
     @week.each do |day|
       @year = Time.now.year
