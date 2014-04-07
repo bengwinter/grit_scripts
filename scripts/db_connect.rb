@@ -29,7 +29,8 @@ class Gym < ActiveRecord::Base
   has_many :courses
   
   validates_presence_of :name
-  validates_uniqueness_of :name, scope: :organization_id
+  validates_presence_of :address
+  validates_uniqueness_of :address, scope: [:organization_id, :city, :state]
   #uniquness based on Address, URL, course-url 
   #raise error if name is the same
 end
