@@ -2,23 +2,23 @@ require_relative '../db_connect.rb'
 
 #calendar changes on Sunday or Monday
 
-@course_creations = 0
-@course_duplications = 0
-@course_errors = 0
-@instructor_creations = 0
-@instructor_duplications = 0
-@instructor_errors = 0
-@section_creations = 0
-@section_duplications = 0
-@section_errors = 0
-@section_cancellations = 0
-
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 org = Organization.where(name: "Soul Cycle")[0]
 browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
+  @course_creations = 0
+  @course_duplications = 0
+  @course_errors = 0
+  @instructor_creations = 0
+  @instructor_duplications = 0
+  @instructor_errors = 0
+  @section_creations = 0
+  @section_duplications = 0
+  @section_errors = 0
+  @section_cancellations = 0
+  
   gym["course_url"].each do |course_url|
     browser.goto course_url
 
@@ -96,9 +96,9 @@ org.gyms.each do |gym|
       #section
         begin
           if (session.css('.time').text.include?('PM') && session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i != 12)
-            start_time_utc = Time.new(@year, @month, @day, (session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[0] + 12), session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
+            start_time_utc = Time.new(@year, @month, @day, (session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i + 12), session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
           else
-            start_time_utc = Time.new(@year, @month, @day, session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[0], session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
+            start_time_utc = Time.new(@year, @month, @day, session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i, session.css('.time').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
           end
           end_time_utc = start_time_utc + 45.minutes
           start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
@@ -122,6 +122,6 @@ org.gyms.each do |gym|
        
       end
     end
-    File.open('/Users/benwinter/Code/Gritsy/production_code/data_collection/logs/soul_cycle_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}, Section Cancellation: #{@section_cancellations}")}
+    File.open('/Users/benwinter/Code/Gritsy/production_code/prod_data_collection/logs/soul_cycle_logs.txt', 'ab') {|file| file.puts("#{gym.name}(#{gym.id}) at #{Time.now}; Course Creations: #{@course_creations}, Course Duplications: #{@course_duplications}, Course Errors: #{@course_errors}, Instructor Creations: #{@instructor_creations}, Instructor Duplications: #{@instructor_duplications}, Instructor Errors: #{@instructor_errors}, Section Creations: #{@section_creations}, Section Duplications: #{@section_duplications}, Section Errors: #{@section_errors}, Section Cancellation: #{@section_cancellations}")}
   end
 end

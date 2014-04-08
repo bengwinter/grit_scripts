@@ -1,1 +1,0 @@
-Flywheel Sports(53) at 2014-04-07 17:50:44 -0400; Course Creations: 2, Course Duplications: 64, Course Errors: 1, Instructor Creations: 9, Instructor Duplications: 58, Instructor Errors: 0, Section Creations: 66, Section Duplications: 0, Section Errors: 1, Section Cancellation: 0

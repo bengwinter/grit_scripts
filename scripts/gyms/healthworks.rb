@@ -1,24 +1,22 @@
 require_relative '../db_connect.rb'
 
-#calendar changes on Sunday or Monday
-
-@course_creations = 0
-@course_duplications = 0
-@course_errors = 0
-@instructor_creations = 0
-@instructor_duplications = 0
-@instructor_errors = 0
-@section_creations = 0
-@section_duplications = 0
-@section_errors = 0
-@section_cancellations = 0
-
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 org = Organization.where(name: "Healthworks Fitness Centers for Women")[0]
 browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
+  @course_creations = 0
+  @course_duplications = 0
+  @course_errors = 0
+  @instructor_creations = 0
+  @instructor_duplications = 0
+  @instructor_errors = 0
+  @section_creations = 0
+  @section_duplications = 0
+  @section_errors = 0
+  @section_cancellations = 0
+
   gym["course_url"].each do |course_url|
     if course_url != ""
       browser.goto course_url
@@ -117,7 +115,7 @@ org.gyms.each do |gym|
             else
               start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)              
             end
-            if (data.css('.hc_endtime').text.include?('PM') && data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i != 12)
+            if (data.css('.hc_endtime').text.include?('PM') && data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').gsub(' ','').strip.split(':')[0].to_i != 12)
               end_time_utc = Time.new(@year, @month, @day, (data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0].to_i + 12), data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
             else 
               end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)

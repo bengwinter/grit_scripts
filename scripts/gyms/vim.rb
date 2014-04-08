@@ -15,7 +15,7 @@ require_relative '../db_connect.rb'
 # @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 org = Organization.where(name: "VIM Fitness Spa & Salon")[0]
-browser = Watir::Browser.new :firefox
+browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
   gym["course_url"].each do |course_url|
@@ -23,54 +23,41 @@ org.gyms.each do |gym|
       browser.goto course_url
 
       if gym.address == "350 Massachusetts Avenue"
-        click_tag = ""
+        click_tag = "2"
       else
-        click_tag = ""
+        click_tag = "3"
       end
 
-      browser.frame.td(css: '#tabTD107').click
+      sleep(3.4)
 
+      browser.frame.td(css: '#tabTD107').click
       browser.frame.link(css: '.selectBox-dropdown').click
+      browser.frame.link(rel: click_tag).click
 
       sleep(6.2)
 
-      binding.pry
-
-      browser.div(css: '.schedule').trs.each do |row|
+      browser.frame.div(css: '#main-content').table(css: '#classSchedule-mainTable').trs.each do |row|
         data = Nokogiri::HTML(row.html)
 
-        if data.css('.schedule_header')[0] != nil
+        if data.css('.evenRow')[0] == nil && data.css('.oddRow')[0] == nil
           @year = Time.now.year
-          @month = Date::MONTHNAMES.index(data.css('.hc_date')[0].text.split(" ")[0])
-          @day = data.css('.hc_date')[0].text.split(" ")[1].to_i
-        elsif data.css('tr')[0].attributes["class"].value.include?("cancel")
-          begin
-            c_title = data.css('.classname').text.strip
-            c_level = "Not Provided"
-            c_start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
-            c_end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
-            c_class_date = Date.new(@year, @month, @day)
-
-            gym.courses.where(title: c_title, level: c_level)[0].sections.where(class_date: c_class_date, start_time_utc: c_start_time_utc, end_time_utc: c_end_time_utc)[0].destroy
-            @section_cancellations += 1
-          rescue
-          end
+          @month = Date::MONTHNAMES.index(data.css('b').children[2].text.split(' ')[0])
+          @day = data.css('b').children[2].text.split(' ')[1].to_i
         else
         ##course
-          begin  
-            title = data.css('.classname').text.strip
+          begin 
+            title = data.css('td')[2].text.strip
             level = "Not Provided"
 
             if gym.courses.where(title: title, level: level) == []
               paid = "Not Provided"
-              categories = data.css('.visit_type').css('span').text.strip
+              categories = "Not Provided"
               members_only = TRUE ##no website identifier, assuming members only
               
               sleep(1.2)
-              course_popup = Watir::Browser.new :phantomjs
-              course_popup.goto data.css('.classname').css('a')[0].attr('data-url')
-                description = course_popup.div(css: '.class_description').text
-              course_popup.close
+              row.tds[2].link.click
+                description = browser.frame.div(css: '#descDivWrapper').div(css: '.userHTML').text
+              browser.frame.div(css: '#removeModal').click
 
               @course = gym.courses.create(title: title, level: level, description: description, categories: categories, members_only: members_only, paid: paid)
               @course_creations += 1
@@ -86,28 +73,24 @@ org.gyms.each do |gym|
 
         ##instructor
           begin
-            first_name = data.css('.trainer')[1].text.split(' ')[0]
-            last_name = data.css('.trainer')[1].text.split(' ')[1]
-            phone_number = "Cambridge Athletic Center" #no number provided
+            first_name = data.css('td')[3].text.split(' ')[0].strip
+            last_name = data.css('td')[3].text.split(' ')[1] == nil ? "VIM" : data.css('td')[3].text.split(' ')[1].strip
+            phone_number = "VIM Fitness Spa & Salon" #no number provided
 
             if Instructor.where(first_name: first_name, last_name: last_name, phone_number: phone_number) == []
               personal_trainer = TRUE ##not provided so assuming all teachers are available for personal training
-              sleep(0.5)
-              instructor_popup = Watir::Browser.new :phantomjs
-              instructor_popup.goto data.css('.trainer').css('a')[0].attr('data-url')
-                cerifications = "See Raw Description"
-                accomplishments = "See Raw Description"
-                philosophy = "See Raw Description"
-                gender = "Not Provided"
-                birthday = "Not Provided"
-                email = "Not Provided"
-                address = "Not Provided"
-                city = "Not Provided"
-                state = "Not Provided"
-                zip_code = "Not Provided"
-                raw_description = instructor_popup.div(css: '.trainer_bio').text
-                description = ""
-              instructor_popup.close
+              cerifications = "See Raw Description"
+              accomplishments = "See Raw Description"
+              philosophy = "See Raw Description"
+              gender = "Not Provided"
+              birthday = "Not Provided"
+              email = "Not Provided"
+              address = "Not Provided"
+              city = "Not Provided"
+              state = "Not Provided"
+              zip_code = "Not Provided"
+              raw_description = "Not Provided"
+              description = "Not Provided"
                 
               
               @instructor = Instructor.create(first_name: first_name, last_name: last_name, phone_number: phone_number, personal_trainer: personal_trainer, cerifications: cerifications, accomplishments: accomplishments, philosophy: philosophy, gender: gender, birthday: birthday, email: email, address: address, city: city, state: state, zip_code: zip_code, description: description, raw_description: raw_description)
@@ -123,15 +106,28 @@ org.gyms.each do |gym|
           
         #section
           begin
-            start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
-            end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
+             if (data.css('td')[0].text.include?('pm') && data.css('td')[0].text.gsub(' ','').gsub('am','').gsub('pm','').strip.split(':')[0].to_i != 12) 
+              start_time_utc = Time.new(@year, @month, @day, (data.css('td')[0].text.gsub(' ','').gsub('am','').gsub('pm','').strip.split(':')[0].to_i + 12), data.css('td')[0].text.gsub(' ','').gsub('am','').gsub('pm','').strip.split(':')[1].to_i, 0, gym.timezone_offset)
+            else
+              start_time_utc = Time.new(@year, @month, @day, data.css('td')[0].text.gsub(' ','').gsub('am','').gsub('pm','').strip.split(':')[0].to_i, data.css('td')[0].text.gsub(' ','').gsub('am','').gsub('pm','').strip.split(':')[1].to_i, 0, gym.timezone_offset)            
+            end
+            
+            raw_duration = data.css('td')[5].text.split(' ')
+            if raw_duration[2].include?('hour')
+              duration = raw_duration[1].to_i * 60
+            else
+              duration = raw_duration[1].to_i
+            end
+
+            end_time_utc = start_time_utc + duration.minutes
+
             start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
             end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
-            duration = (end_time_utc - start_time_utc) / 60
+
             class_date = Date.new(@year, @month, @day)
-            substitute = data.css('.trainer')[1].text.include?('sub') ? TRUE : FALSE
+            substitute = FALSE #not provided
             room_location = "Not Provided"
-            signup = data.css('.signup_now').length != 0 ? TRUE : FALSE
+            signup = FALSE #not provided
             size = 0 ##no website identifier
          
             if @course.sections.where(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc, instructor_id: @instructor.id) == []

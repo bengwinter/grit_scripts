@@ -1,24 +1,22 @@
 require_relative '../db_connect.rb'
 
-#calendar changes on Sunday or Monday
-
-@course_creations = 0
-@course_duplications = 0
-@course_errors = 0
-@instructor_creations = 0
-@instructor_duplications = 0
-@instructor_errors = 0
-@section_creations = 0
-@section_duplications = 0
-@section_errors = 0
-@section_cancellations = 0
-
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 org = Organization.where(name: "Flywheel Sports")[0]
 browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
+  @course_creations = 0
+  @course_duplications = 0
+  @course_errors = 0
+  @instructor_creations = 0
+  @instructor_duplications = 0
+  @instructor_errors = 0
+  @section_creations = 0
+  @section_duplications = 0
+  @section_errors = 0
+  @section_cancellations = 0
+  
   gym["course_url"].each do |course_url|
     browser.goto course_url
 
@@ -33,8 +31,8 @@ org.gyms.each do |gym|
       data.css('a').each do |session|
 
       ##course
-        begin  
-          title = session.css('.type').text.split(' (')[0].strip
+        begin
+          title = session.css('.type').text != "" ? session.css('.type').text.split(' (')[0].strip : session.css('.music').text.split(' (')[0].gsub('(1 Hour)','').strip
           level = "Not Provided"
 
           if gym.courses.where(title: title, level: level) == []
@@ -96,7 +94,7 @@ org.gyms.each do |gym|
           else
             start_time_utc = Time.new(@year, @month, @day, session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[0], session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[1], 0, gym.timezone_offset)
           end
-          end_time_utc = start_time_utc + title.split[1].to_i.minutes
+          end_time_utc = session.css('.music').text != "" ? start_time_utc + 60.minutes : start_time_utc + title.split[1].to_i.minutes
           start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
           end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
           duration = (end_time_utc - start_time_utc) / 60

@@ -1,17 +1,5 @@
 require_relative '../db_connect.rb'
 
-#calendar changes on Sunday or Monday
-
-@course_creations = 0
-@course_duplications = 0
-@course_errors = 0
-@instructor_creations = 0
-@instructor_duplications = 0
-@instructor_errors = 0
-@section_creations = 0
-@section_duplications = 0
-@section_errors = 0
-@section_cancellations = 0
 
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -19,6 +7,17 @@ org = Organization.where(name: "Sports Club LA")[0]
 browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
+  @course_creations = 0
+  @course_duplications = 0
+  @course_errors = 0
+  @instructor_creations = 0
+  @instructor_duplications = 0
+  @instructor_errors = 0
+  @section_creations = 0
+  @section_duplications = 0
+  @section_errors = 0
+  @section_cancellations = 0
+
   gym["course_url"].each do |course_url|
     if course_url != ""
       browser.goto course_url
@@ -95,7 +94,7 @@ org.gyms.each do |gym|
               start_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
             end
 
-            if (course_data.css('.time').text.split[2].include?('pm') && course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0].to_i + 12)
+            if (course_data.css('.time').text.split[2].include?('pm') && course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0].to_i != 12)
               end_time_utc = Time.new(@year, @month, @day, (course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0].to_i + 12), course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
             else
               end_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
@@ -126,5 +125,3 @@ org.gyms.each do |gym|
     end
   end
 end
-
-

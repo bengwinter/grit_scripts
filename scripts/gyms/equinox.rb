@@ -1,21 +1,21 @@
 require_relative '../db_connect.rb'
 
-@course_creations = 0
-@course_duplications = 0
-@course_errors = 0
-@instructor_creations = 0
-@instructor_duplications = 0
-@instructor_errors = 0
-@section_creations = 0
-@section_duplications = 0
-@section_errors = 0
-@section_cancellations = 0
-
 @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 org = Organization.where(name: "Equinox")[0]
 browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
+  @course_creations = 0
+  @course_duplications = 0
+  @course_errors = 0
+  @instructor_creations = 0
+  @instructor_duplications = 0
+  @instructor_errors = 0
+  @section_creations = 0
+  @section_duplications = 0
+  @section_errors = 0
+  @section_cancellations = 0
+  
   gym["course_url"].each do |course_url|
     if course_url != ""
       sleep(4.2)
@@ -137,11 +137,15 @@ org.gyms.each do |gym|
           begin
             if (@day_counter > 6 && course_data.children[4].text.split('-')[0].split(':')[0].to_i != 12)
               start_time_utc = Time.new(@year, @month, @day, (course_data.children[4].text.split('-')[0].split(':')[0].to_i + 12), course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
-              end_time_utc = Time.new(@year, @month, @day, (course_data.children[4].text.split('-')[1].split(':')[0].to_i + 12), course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
             else
               start_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[0].split(':')[0], course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
-              end_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
             end
+            if (@day_counter > 6 && course_data.children[4].text.split('-')[1].split(':')[0].to_i != 12)
+               end_time_utc = Time.new(@year, @month, @day, (course_data.children[4].text.split('-')[1].split(':')[0].to_i + 12), course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
+            else
+                end_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
+            end
+            
             start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
             end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
             duration = (end_time_utc - start_time_utc) / 60
@@ -159,7 +163,6 @@ org.gyms.each do |gym|
               @section_duplications += 1
             end
           rescue
-
             @section_errors += 1
           end
         end

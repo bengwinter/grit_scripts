@@ -1,23 +1,20 @@
 require_relative '../db_connect.rb'
 
-
-@course_creations = 0
-@course_duplications = 0
-@course_errors = 0
-@instructor_creations = 0
-@instructor_duplications = 0
-@instructor_errors = 0
-@section_creations = 0
-@section_duplications = 0
-@section_errors = 0
-@section_cancellations = 0
-
-# @week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
 org = Organization.where(name: "Cambridge Athletic Club")[0]
 browser = Watir::Browser.new :phantomjs
 
 org.gyms.each do |gym|
+  @course_creations = 0
+  @course_duplications = 0
+  @course_errors = 0
+  @instructor_creations = 0
+  @instructor_duplications = 0
+  @instructor_errors = 0
+  @section_creations = 0
+  @section_duplications = 0
+  @section_errors = 0
+  @section_cancellations = 0
+
   gym["course_url"].each do |course_url|
     if course_url != ""
       browser.goto course_url
@@ -31,16 +28,21 @@ org.gyms.each do |gym|
           @year = Time.now.year
           @month = Date::MONTHNAMES.index(data.css('.hc_date')[0].text.split(" ")[0])
           @day = data.css('.hc_date')[0].text.split(" ")[1].to_i
+        elsif data.css('tr')[0].attributes["class"].value.include?("no_classes")
         elsif data.css('tr')[0].attributes["class"].value.include?("cancel")
           begin
+            
             c_title = data.css('.classname').text.strip
             c_level = "Not Provided"
             c_start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
             c_end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
             c_class_date = Date.new(@year, @month, @day)
-
-            gym.courses.where(title: c_title, level: c_level)[0].sections.where(class_date: c_class_date, start_time_utc: c_start_time_utc, end_time_utc: c_end_time_utc)[0].destroy
-            @section_cancellations += 1
+            if gym.courses.where(title: c_title, level: c_level)[0] != nil
+              gym.courses.where(title: c_title, level: c_level)[0].sections.where(class_date: c_class_date, start_time_utc: c_start_time_utc, end_time_utc: c_end_time_utc)[0].destroy
+              @section_cancellations += 1
+            else
+              @section_cancellations += 1
+            end
           rescue
           end
         else
@@ -116,7 +118,7 @@ org.gyms.each do |gym|
             else
               start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)              
             end
-            if (data.css('.hc_endtime').text.include?('PM') && data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i != 12)
+            if (data.css('.hc_endtime').text.include?('PM') && data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').gsub(' ','').strip.split(':')[0].to_i != 12)
               end_time_utc = Time.new(@year, @month, @day, (data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0].to_i + 12), data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
             else 
               end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
