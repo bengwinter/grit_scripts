@@ -135,8 +135,7 @@ org.gyms.each do |gym|
 
         ##section
           begin
-            binding.pry
-            if (@day_counter <= 6 && course_data.children[4].text.split('-')[0].split(':')[0].to_i != 12)
+            if (@day_counter > 6 && course_data.children[4].text.split('-')[0].split(':')[0].to_i != 12)
               start_time_utc = Time.new(@year, @month, @day, (course_data.children[4].text.split('-')[0].split(':')[0].to_i + 12), course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
               end_time_utc = Time.new(@year, @month, @day, (course_data.children[4].text.split('-')[1].split(':')[0].to_i + 12), course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
             else
