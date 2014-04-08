@@ -21,6 +21,15 @@ org.gyms.each do |gym|
       sleep(4.2)
       browser.goto course_url
 
+      @day_counter = 0
+      today = Date.today
+      next_monday = today += 1 + ((0 - today.wday) % 7)
+      @dates = []
+      3.times do
+        @dates << next_monday << (next_monday + 1) << (next_monday + 2) << (next_monday + 3) << (next_monday + 4) << (next_monday + 5) << (next_monday + 6)
+      end
+
+
       ##collect course categories
       @category_by_courses = {}
 
@@ -56,14 +65,10 @@ org.gyms.each do |gym|
       end
 
       browser.goto course_url
-      browser.as(class: 'btn-close')[0].click
-      
-      @day_counter = 0
-      today = Date.today
-      next_monday = today += 1 + ((0 - today.wday) % 7)
-      @dates = []
-      3.times do
-        @dates << next_monday << (next_monday + 1) << (next_monday + 2) << (next_monday + 3) << (next_monday + 4) << (next_monday + 5) << (next_monday + 6)
+      sleep(1.2)
+      begin
+        browser.as(class: 'btn-close')[0].click
+      rescue
       end
 
       browser.elements(css: 'td.class-detail').each do |x|
