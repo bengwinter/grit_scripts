@@ -111,8 +111,16 @@ org.gyms.each do |gym|
           
         #section
           begin
-            start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
-            end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
+            if (data.css('.hc_starttime').text.include?('PM') && data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i != 12) 
+              start_time_utc = Time.new(@year, @month, @day, (data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i + 12), data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)
+            else
+              start_time_utc = Time.new(@year, @month, @day, data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[0], data.css('.hc_starttime').text.gsub('AM','').gsub('PM','').strip.split(':')[1], 0, gym.timezone_offset)              
+            end
+            if (data.css('.hc_endtime').text.include?('PM') && data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').strip.split(':')[0].to_i != 12)
+              end_time_utc = Time.new(@year, @month, @day, (data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0].to_i + 12), data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
+            else 
+              end_time_utc = Time.new(@year, @month, @day, data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[0], data.css('.hc_endtime').text.gsub('AM','').gsub('PM','').gsub('-','').strip.split(':')[1], 0, gym.timezone_offset)
+            end
             start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
             end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
             duration = (end_time_utc - start_time_utc) / 60
@@ -121,7 +129,7 @@ org.gyms.each do |gym|
             room_location = "Not Provided"
             signup = data.css('.signup_now').length != 0 ? TRUE : FALSE
             size = 0 ##no website identifier
-         
+
             if @course.sections.where(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc, instructor_id: @instructor.id) == []
               @course.sections.create(class_date: class_date, start_time_utc: start_time_utc, end_time_utc: end_time_utc, start_time_local: start_time_local, end_time_local: end_time_local, instructor_id: @instructor.id, room_location: room_location, duration: duration, substitute: substitute, signup: signup, size: size)
               @section_creations += 1

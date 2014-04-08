@@ -91,7 +91,11 @@ org.gyms.each do |gym|
         
       #section
         begin
-          start_time_utc = Time.new(@year, @month, @day, session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[0], session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[1], 0, gym.timezone_offset)
+          if (session.css('.time').text.include?('pm') && session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[0].to_i != 12)
+            start_time_utc = Time.new(@year, @month, @day, (session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[0].to_i + 12), session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[1], 0, gym.timezone_offset)
+          else
+            start_time_utc = Time.new(@year, @month, @day, session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[0], session.css('.time').text.gsub('am','').gsub('pm','').strip.split(':')[1], 0, gym.timezone_offset)
+          end
           end_time_utc = start_time_utc + title.split[1].to_i.minutes
           start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
           end_time_local = end_time_utc + gym.timezone_offset.to_i.hours

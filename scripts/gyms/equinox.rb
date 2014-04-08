@@ -55,7 +55,7 @@ org.gyms.each do |gym|
         end
       end
 
-      browser.goto gym["course_url"]
+      browser.goto course_url
       browser.as(class: 'btn-close')[0].click
       
       @day_counter = 0
@@ -135,8 +135,14 @@ org.gyms.each do |gym|
 
         ##section
           begin
-            start_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[0].split(':')[0], course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
-            end_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
+            binding.pry
+            if (@day_counter <= 6 && course_data.children[4].text.split('-')[0].split(':')[0].to_i != 12)
+              start_time_utc = Time.new(@year, @month, @day, (course_data.children[4].text.split('-')[0].split(':')[0].to_i + 12), course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
+              end_time_utc = Time.new(@year, @month, @day, (course_data.children[4].text.split('-')[1].split(':')[0].to_i + 12), course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
+            else
+              start_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[0].split(':')[0], course_data.children[4].text.split('-')[0].split(':')[1], 0, gym.timezone_offset)
+              end_time_utc = Time.new(@year, @month, @day, course_data.children[4].text.split('-')[1].split(':')[0], course_data.children[4].text.split('-')[1].split(':')[1], 0, gym.timezone_offset)
+            end
             start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
             end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
             duration = (end_time_utc - start_time_utc) / 60

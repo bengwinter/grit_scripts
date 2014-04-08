@@ -89,8 +89,17 @@ org.gyms.each do |gym|
 
         ##section
           begin
-            start_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
-            end_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
+            if (course_data.css('.time').text.split[0].include?('pm') && course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0].to_i != 12)
+              start_time_utc = Time.new(@year, @month, @day, (course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0].to_i + 12), course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
+            else
+              start_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[0].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
+            end
+
+            if (course_data.css('.time').text.split[2].include?('pm') && course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0].to_i + 12)
+              end_time_utc = Time.new(@year, @month, @day, (course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0].to_i + 12), course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
+            else
+              end_time_utc = Time.new(@year, @month, @day, course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[0], course_data.css('.time').text.split[2].gsub('am','').gsub('pm','').split(':')[1], 0, gym.timezone_offset)
+            end
             start_time_local = start_time_utc + gym.timezone_offset.to_i.hours
             end_time_local = end_time_utc + gym.timezone_offset.to_i.hours
             duration = (end_time_utc - start_time_utc) / 60
